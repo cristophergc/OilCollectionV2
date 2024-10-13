@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "61401493275",
+    "project_id": "oilcollectionv2",
+    "storage_bucket": "oilcollectionv2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:61401493275:android:558119e1beefc12e4dadbe",
+        "android_client_info": {
+          "package_name": "com.example.oilcollectionv2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYsBEUS9MY7oKVlfMn1Hha9u6xW-OzO1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
