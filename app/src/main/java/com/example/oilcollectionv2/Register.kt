@@ -2,7 +2,9 @@ package com.example.oilcollectionv2
 
 
 import android.util.Log
+import android.util.Patterns
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
@@ -61,7 +64,10 @@ fun RegisterScreenUi(
     onPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
     onRegisterClick: () -> Unit,
-    errorMessage: String
+    navigateToLogin: () -> Unit,
+    emailError: String,
+    passwordError: String,
+    confirmPasswordError: String
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
@@ -81,23 +87,33 @@ fun RegisterScreenUi(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Email input
         TextField(
             value = email,
             onValueChange = onEmailChange,
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            isError = emailError.isNotEmpty()
         )
+
+        if (emailError.isNotEmpty()) {
+            Text(
+                text = emailError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Password input
         TextField(
             value = password,
             onValueChange = onPasswordChange,
             label = { Text("Password") },
             visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             trailingIcon = {
                 IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                     Icon(
@@ -105,28 +121,50 @@ fun RegisterScreenUi(
                         contentDescription = if (isPasswordVisible) "Hide password" else "Show password"
                     )
                 }
-            }
+            },
+            isError = passwordError.isNotEmpty()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        if (passwordError.isNotEmpty()) {
+            Text(
+                text = passwordError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         TextField(
             value = confirmPassword,
             onValueChange = onConfirmPasswordChange,
             label = { Text("Confirm Password") },
             visualTransformation = if (isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             trailingIcon = {
                 IconButton(onClick = { isConfirmPasswordVisible = !isConfirmPasswordVisible }) {
-                    val icon = if (isConfirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    Icon(imageVector = icon, contentDescription = null)
+                    Icon(
+                        imageVector = if (isConfirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = null
+                    )
                 }
-            }
+            },
+            isError = confirmPasswordError.isNotEmpty()
         )
+
+        if (confirmPasswordError.isNotEmpty()) {
+            Text(
+                text = confirmPasswordError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Register button
         Button(
             onClick = onRegisterClick,
             modifier = Modifier.fillMaxWidth()
@@ -134,21 +172,63 @@ fun RegisterScreenUi(
             Text("Register")
         }
 
-        // Display error message if login fails
-        if (errorMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(errorMessage, color = MaterialTheme.colorScheme.error)
-        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Already have an account? Login",
+            style = MaterialTheme.typography.bodySmall,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable { navigateToLogin() }
+        )
     }
 }
 
+
 @Composable
 fun RegisterScreen(navigateToLogin: () -> Unit) {
-    // State to hold user input
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
+    var confirmPasswordError by remember { mutableStateOf("") }
+
+    fun validateInputs(): Boolean {
+        var isValid = true
+
+        if (email.isEmpty()) {
+            emailError = "Please add a valid email"
+            isValid = false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailError = "Invalid email format"
+            isValid = false
+        } else {
+            emailError = ""
+        }
+
+        if (password.isEmpty()) {
+            passwordError = "Password cannot be empty"
+            isValid = false
+        } else if (password.length < 6) {
+            passwordError = "Password must be at least 6 characters"
+            isValid = false
+        } else {
+            passwordError = ""
+        }
+
+        if (confirmPassword.isEmpty()) {
+            confirmPasswordError = "Please confirm your password"
+            isValid = false
+        } else if (password != confirmPassword) {
+            confirmPasswordError = "Passwords do not match"
+            isValid = false
+        } else {
+            confirmPasswordError = ""
+        }
+
+        return isValid
+    }
 
     RegisterScreenUi(
         email = email,
@@ -156,16 +236,22 @@ fun RegisterScreen(navigateToLogin: () -> Unit) {
         password = password,
         confirmPassword = confirmPassword,
         onPasswordChange = { password = it },
-        onConfirmPasswordChange = {confirmPassword = it},
+        onConfirmPasswordChange = { confirmPassword = it },
         onRegisterClick = {
-            handleRegister(email, password, navigateToLogin)
+            if (validateInputs()) {
+                handleRegister(email, password, navigateToLogin)
+            }
         },
-        errorMessage = errorMessage
+        navigateToLogin = navigateToLogin,
+        emailError = emailError,
+        passwordError = passwordError,
+        confirmPasswordError = confirmPasswordError
     )
 }
 
+
 @Preview(showBackground = true)
 @Composable
-fun PreviewLoginScreen() {
+fun PreviewRegisterScreen() {
     RegisterScreen(navigateToLogin = {})
 }

@@ -1,3 +1,4 @@
+package com.example.oilcollectionv2
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -26,14 +28,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.oilcollectionv2.R
 import com.google.firebase.auth.FirebaseAuth
 
-// Firebase logic separated into its own function
 fun handleLogin(
     email: String,
     password: String,
@@ -51,7 +52,6 @@ fun handleLogin(
         }
 }
 
-// UI Composable: Separate composable for the login screen UI
 @Composable
 fun LoginScreenUi(
     email: String,
@@ -79,23 +79,23 @@ fun LoginScreenUi(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Email input
         TextField(
             value = email,
             onValueChange = onEmailChange,
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Password input
         TextField(
             value = password,
             onValueChange = onPasswordChange,
             label = { Text("Password") },
             visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             trailingIcon = {
                 IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                     Icon(
@@ -108,7 +108,6 @@ fun LoginScreenUi(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Login button
         Button(
             onClick = onLoginClick,
             modifier = Modifier.fillMaxWidth()
@@ -118,7 +117,6 @@ fun LoginScreenUi(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Register button
         Button(
             onClick = onRegisterClick,
             modifier = Modifier.fillMaxWidth()
@@ -126,7 +124,6 @@ fun LoginScreenUi(
             Text("Register")
         }
 
-        // Display error message if login fails
         if (errorMessage.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(errorMessage, color = MaterialTheme.colorScheme.error)
