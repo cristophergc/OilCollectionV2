@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-//setup firestore, fix the navigation
 
 @Composable
 fun UserDetailsForm(
@@ -147,7 +146,8 @@ fun updateUserDetails(
             "suburb" to suburb,
             "city" to city,
             "bankAccountNumber" to bankAccountNumber,
-            "email" to email
+            "email" to email,
+            "detailsFilled" to true
         )
         FirebaseFirestore.getInstance().collection("users")
             .document(userId).update(updatedUserData)

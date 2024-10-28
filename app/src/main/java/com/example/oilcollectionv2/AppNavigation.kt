@@ -1,6 +1,7 @@
 package com.example.oilcollectionv2
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,15 +16,20 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { navController.navigate("dashboard") },
-                onRegisterClick = { navController.navigate("register") }
+                onRegisterClick = { navController.navigate("register") },
+                navigateToDetailsForm = { navController.navigate("userDetailsForm") }
             )
         }
         composable("register") {
+
+            val registerViewModel: RegisterViewModel = viewModel()
+
             RegisterScreen(
-                navigateToLogin = { navController.navigate("login") }
+                navigateToLogin = { navController.navigate("login") },
+                viewModel = registerViewModel
             )
         }
-        composable("update") {
+        composable("userDetailsForm") {
             UserDetailsForm(
                 onUpdateSuccess = { navController.navigate("dashboard") },
                 onUpdateFailure = {}

@@ -2,6 +2,7 @@ package com.example.oilcollectionv2
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,26 +34,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
-
-fun handleLogin(
-    email: String,
-    password: String,
-    onLoginSuccess: () -> Unit,
-    onLoginFailed: (String) -> Unit
-) {
-    val firebaseAuth = FirebaseAuth.getInstance()
-    firebaseAuth.signInWithEmailAndPassword(email, password)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                onLoginSuccess()
-            } else {
-                onLoginFailed(task.exception?.message ?: "Login failed")
-            }
-        }
-}
 
 @Composable
 fun LoginScreenUi(
@@ -72,7 +58,7 @@ fun LoginScreenUi(
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground), // Replace with your image resource
+            painter = painterResource(id = R.drawable.ic_launcher_foreground),
             contentDescription = "Login Image",
             modifier = Modifier.size(120.dp)
         )
@@ -135,11 +121,14 @@ fun LoginScreenUi(
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onRegisterClick: () -> Unit,
+    navigateToDetailsForm: () -> Unit,
+    viewModel: LoginViewModel = viewModel()
 ) {
     val currentUser = FirebaseAuth.getInstance().currentUser
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
+    val loading by viewModel.loading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
@@ -153,17 +142,33 @@ fun LoginScreen(
         password = password,
         onPasswordChange = { password = it },
         onLoginClick = {
-            handleLogin(email, password, onLoginSuccess) { error ->
-                errorMessage = error
-            }
+            viewModel.clearError()
+            viewModel.login(email, password, onLoginSuccess, navigateToDetailsForm)
         },
         onRegisterClick = onRegisterClick,
         errorMessage = errorMessage
     )
+
+    if (loading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewLoginScreen() {
-    LoginScreen(onLoginSuccess = {}, onRegisterClick = {})
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewLoginScreen() {
+//    MaterialTheme {
+//        LoginScreen(
+//            onLoginSuccess = {},
+//            onRegisterClick = {},
+//            viewModel = mockViewModel
+//        )
+//    }
+//}
+
+

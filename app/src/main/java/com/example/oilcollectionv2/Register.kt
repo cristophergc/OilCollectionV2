@@ -2,10 +2,10 @@ package com.example.oilcollectionv2
 
 
 import android.util.Log
-import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,12 +18,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
 
 fun handleRegister(
@@ -185,73 +188,57 @@ fun RegisterScreenUi(
 
 
 @Composable
-fun RegisterScreen(navigateToLogin: () -> Unit) {
+fun RegisterScreen(
+    navigateToLogin: () -> Unit,
+    viewModel: RegisterViewModel = viewModel()
+    ) {
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var emailError by remember { mutableStateOf("") }
-    var passwordError by remember { mutableStateOf("") }
-    var confirmPasswordError by remember { mutableStateOf("") }
-
-    fun validateInputs(): Boolean {
-        var isValid = true
-
-        if (email.isEmpty()) {
-            emailError = "Please add a valid email"
-            isValid = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            emailError = "Invalid email format"
-            isValid = false
-        } else {
-            emailError = ""
-        }
-
-        if (password.isEmpty()) {
-            passwordError = "Password cannot be empty"
-            isValid = false
-        } else if (password.length < 6) {
-            passwordError = "Password must be at least 6 characters"
-            isValid = false
-        } else {
-            passwordError = ""
-        }
-
-        if (confirmPassword.isEmpty()) {
-            confirmPasswordError = "Please confirm your password"
-            isValid = false
-        } else if (password != confirmPassword) {
-            confirmPasswordError = "Passwords do not match"
-            isValid = false
-        } else {
-            confirmPasswordError = ""
-        }
-
-        return isValid
-    }
+    val email by viewModel.email.collectAsState()
+    val password by viewModel.password.collectAsState()
+    val confirmPassword by viewModel.confirmPassword.collectAsState()
+    val emailError by viewModel.emailError.collectAsState()
+    val passwordError by viewModel.passwordError.collectAsState()
+    val confirmPasswordError by viewModel.confirmPasswordError.collectAsState()
+    val loading by viewModel.loading.collectAsState()
 
     RegisterScreenUi(
         email = email,
-        onEmailChange = { email = it },
+        onEmailChange = viewModel::onEmailChange,
         password = password,
         confirmPassword = confirmPassword,
-        onPasswordChange = { password = it },
-        onConfirmPasswordChange = { confirmPassword = it },
-        onRegisterClick = {
-            if (validateInputs()) {
-                handleRegister(email, password, navigateToLogin)
-            }
-        },
+        onPasswordChange = viewModel::onPasswordChange,
+        onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+        onRegisterClick = { viewModel.register(navigateToLogin) },
         navigateToLogin = navigateToLogin,
         emailError = emailError,
         passwordError = passwordError,
         confirmPasswordError = confirmPasswordError
     )
+
+    if (loading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    }
 }
 
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewRegisterScreen() {
-    RegisterScreen(navigateToLogin = {})
+
+    val mockViewModel = RegisterViewModel().apply {
+        onEmailChange("test@example.com")
+        onPasswordChange("password123")
+        onConfirmPasswordChange("password123")
+    }
+
+    RegisterScreen(
+        navigateToLogin = {},
+        viewModel = mockViewModel
+        )
+
 }
