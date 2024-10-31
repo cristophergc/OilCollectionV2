@@ -121,7 +121,6 @@ fun LoginScreenUi(
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onRegisterClick: () -> Unit,
-    navigateToDetailsForm: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val currentUser = FirebaseAuth.getInstance().currentUser
@@ -143,7 +142,7 @@ fun LoginScreen(
         onPasswordChange = { password = it },
         onLoginClick = {
             viewModel.clearError()
-            viewModel.login(email, password, onLoginSuccess, navigateToDetailsForm)
+            viewModel.login(email, password, onLoginSuccess)
         },
         onRegisterClick = onRegisterClick,
         errorMessage = errorMessage

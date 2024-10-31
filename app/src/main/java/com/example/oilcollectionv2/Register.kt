@@ -1,7 +1,6 @@
 package com.example.oilcollectionv2
 
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,23 +39,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.firebase.auth.FirebaseAuth
-
-fun handleRegister(
-    email: String,
-    password: String,
-    navigateToLogin: () -> Unit,
-) {
-    val firebaseAuth = FirebaseAuth.getInstance()
-    firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener{
-        task ->
-            if (task.isSuccessful) {
-                navigateToLogin()
-            } else {
-                Log.e("error", task.exception?.message.toString())
-            }
-        }
-}
 
 @Composable
 fun RegisterScreenUi(
@@ -190,6 +172,7 @@ fun RegisterScreenUi(
 @Composable
 fun RegisterScreen(
     navigateToLogin: () -> Unit,
+    navigateToUserDetailsForm: () -> Unit,
     viewModel: RegisterViewModel = viewModel()
     ) {
 
@@ -208,7 +191,7 @@ fun RegisterScreen(
         confirmPassword = confirmPassword,
         onPasswordChange = viewModel::onPasswordChange,
         onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
-        onRegisterClick = { viewModel.register(navigateToLogin) },
+        onRegisterClick = { viewModel.register(navigateToUserDetailsForm) },
         navigateToLogin = navigateToLogin,
         emailError = emailError,
         passwordError = passwordError,
@@ -238,6 +221,7 @@ fun PreviewRegisterScreen() {
 
     RegisterScreen(
         navigateToLogin = {},
+        navigateToUserDetailsForm = {},
         viewModel = mockViewModel
         )
 

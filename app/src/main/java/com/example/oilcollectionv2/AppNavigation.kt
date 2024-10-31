@@ -16,8 +16,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { navController.navigate("dashboard") },
-                onRegisterClick = { navController.navigate("register") },
-                navigateToDetailsForm = { navController.navigate("userDetailsForm") }
+                onRegisterClick = { navController.navigate("register") }
             )
         }
         composable("register") {
@@ -26,6 +25,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
 
             RegisterScreen(
                 navigateToLogin = { navController.navigate("login") },
+                navigateToUserDetailsForm = { navController.navigate("userDetailsForm") },
                 viewModel = registerViewModel
             )
         }
