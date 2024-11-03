@@ -22,6 +22,7 @@ class UserDetailsViewModel : ViewModel() {
     var email by mutableStateOf("")
 
     var errorMessage by mutableStateOf("")
+    var loading by mutableStateOf(false)
 
     fun updateUserDetails(
         onSuccess: () -> Unit,
@@ -40,15 +41,47 @@ class UserDetailsViewModel : ViewModel() {
                 "email" to email,
             )
 
+            loading = true
+
             viewModelScope.launch {
-                FirebaseFirestore.getInstance().collection("users")
-                    .document(userId).update(updatedUserData)
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { e -> onFailure(e.message ?: "Failed to update user data") }
+                val documentRef =
+                    FirebaseFirestore.getInstance().collection("users").document(userId)
+
+                documentRef.get()
+                    .addOnSuccessListener { document ->
+                        if (document.exists()) {
+                            documentRef.update(updatedUserData)
+                                .addOnSuccessListener {
+                                    loading = false
+                                    onSuccess()
+                                }
+                                .addOnFailureListener { e ->
+                                    loading = false
+                                    onFailure(
+                                        e.message ?: "Failed to update user data"
+                                    )
+                                }
+                        } else {
+                            documentRef.set(updatedUserData)
+                                .addOnSuccessListener {
+                                    loading = false
+                                    onSuccess()
+                                }
+                                .addOnFailureListener { e ->
+                                    loading = false
+                                    onFailure(
+                                        e.message ?: "Failed to create user data"
+                                    )
+                                }
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        onFailure(e.message ?: "Failed to retrieve user document")
+                    }
             }
         } else {
             onFailure("User ID is null")
-            Log.e("TAG", "failed to update user")
+            Log.e("TAG", "Failed to update user: User ID is null")
         }
     }
 }
