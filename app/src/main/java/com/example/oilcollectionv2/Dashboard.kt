@@ -109,10 +109,7 @@ fun Dashboard(
                 when (selectedScreen.value) {
                     "My Details" -> {
                         LaunchedEffect(selectedScreen.value) {
-                            userDetailsViewModel.getUserDetails(
-                                onSuccess = { /* Handle successful data load */ },
-                                onFailure = { /* Handle error on data load */ }
-                            )
+                            userDetailsViewModel.getUserDetails()
                         }
                         UserDetailsForm(
                             viewModel = userDetailsViewModel,

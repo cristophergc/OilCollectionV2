@@ -1,6 +1,6 @@
 package com.example.oilcollectionv2
 
-data class UserData(
+data class UserDetails(
     val fullName: String = "",
     val position: String = "",
     val businessName: String = "",

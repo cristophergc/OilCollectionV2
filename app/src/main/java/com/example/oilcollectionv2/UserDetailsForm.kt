@@ -13,6 +13,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +29,10 @@ fun UserDetailsForm(
     onUpdateSuccess: () -> Unit,
     onUpdateFailure: (String) -> Unit
 ) {
+    val userDetails by viewModel.userDetails.collectAsState()
+    val loading by viewModel.loading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -37,44 +43,44 @@ fun UserDetailsForm(
             verticalArrangement = Arrangement.Center
         ) {
             TextField(
-                value = viewModel.fullName,
-                onValueChange = { viewModel.fullName = it },
+                value = userDetails.fullName,
+                onValueChange = { viewModel.updateFullName(it) },
                 label = { Text("Full Name") }
             )
 
             TextField(
-                value = viewModel.position,
-                onValueChange = { viewModel.position = it },
+                value = userDetails.position,
+                onValueChange = { viewModel.updatePosition(it) },
                 label = { Text("Position") }
             )
 
             TextField(
-                value = viewModel.businessName,
-                onValueChange = { viewModel.businessName = it },
+                value = userDetails.businessName,
+                onValueChange = { viewModel.updateBusinessName(it) },
                 label = { Text("Business Name") }
             )
 
             TextField(
-                value = viewModel.businessAddress,
-                onValueChange = { viewModel.businessAddress = it },
+                value = userDetails.businessAddress,
+                onValueChange = { viewModel.updateBusinessAddress(it) },
                 label = { Text("Business Address") }
             )
 
             TextField(
-                value = viewModel.suburb,
-                onValueChange = { viewModel.suburb = it },
+                value = userDetails.suburb,
+                onValueChange = { viewModel.updateSuburb(it) },
                 label = { Text("Suburb") }
             )
 
             TextField(
-                value = viewModel.city,
-                onValueChange = { viewModel.city = it },
+                value = userDetails.city,
+                onValueChange = { viewModel.updateCity(it) },
                 label = { Text("City") }
             )
 
             TextField(
-                value = viewModel.bankAccountNumber,
-                onValueChange = { viewModel.bankAccountNumber = it },
+                value = userDetails.bankAccountNumber,
+                onValueChange = { viewModel.updateBankAccountNumber(it) },
                 label = { Text("Bank Account Number") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
@@ -83,26 +89,28 @@ fun UserDetailsForm(
 
             Button(
                 onClick = {
-                    viewModel.updateUserDetails(
-                        onSuccess = onUpdateSuccess,
-                        onFailure = onUpdateFailure
-                    )
+                    viewModel.updateUserDetails()
+                    if (errorMessage.isEmpty()) {
+                        onUpdateSuccess()
+                    } else {
+                        onUpdateFailure(errorMessage)
+                    }
                 },
-                enabled = !viewModel.loading
+                enabled = !loading
             ) {
                 Text("Update Details")
             }
 
-            if (viewModel.errorMessage.isNotEmpty()) {
+            if (errorMessage.isNotEmpty()) {
                 Text(
-                    text = viewModel.errorMessage,
+                    text = errorMessage,
                     color = Color.Red,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
         }
 
-        if (viewModel.loading) {
+        if (loading) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center)
             )

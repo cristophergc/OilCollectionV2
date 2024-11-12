@@ -1,139 +1,147 @@
 package com.example.oilcollectionv2
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class UserDetailsViewModel : ViewModel() {
 
-    var fullName by mutableStateOf("")
-    var position by mutableStateOf("")
-    var businessName by mutableStateOf("")
-    var businessAddress by mutableStateOf("")
-    var suburb by mutableStateOf("")
-    var city by mutableStateOf("")
-    var bankAccountNumber by mutableStateOf("")
-    var email by mutableStateOf("")
+    private val _userDetails = MutableStateFlow(UserDetails())
+    val userDetails: StateFlow<UserDetails> = _userDetails
 
-    var errorMessage by mutableStateOf("")
-    var loading by mutableStateOf(false)
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading
 
-    fun getUserDetails(onSuccess: (HashMap<String, Any>) -> Unit, onFailure: (String) -> Unit) {
+    private val _errorMessage = MutableStateFlow("")
+    val errorMessage: StateFlow<String> = _errorMessage
+
+    fun updateFullName(newFullName: String) {
+        _userDetails.value = _userDetails.value.copy(fullName = newFullName)
+    }
+
+    fun updatePosition(newPosition: String) {
+        _userDetails.value = _userDetails.value.copy(position = newPosition)
+    }
+
+    fun updateBusinessName(newBusinessName: String) {
+        _userDetails.value = _userDetails.value.copy(businessName = newBusinessName)
+    }
+
+    fun updateBusinessAddress(newBusinessAddress: String) {
+        _userDetails.value = _userDetails.value.copy(businessAddress = newBusinessAddress)
+    }
+
+    fun updateSuburb(newSuburb: String) {
+        _userDetails.value = _userDetails.value.copy(suburb = newSuburb)
+    }
+
+    fun updateCity(newCity: String) {
+        _userDetails.value = _userDetails.value.copy(city = newCity)
+    }
+
+    fun updateBankAccountNumber(newBankAccountNumber: String) {
+        _userDetails.value = _userDetails.value.copy(bankAccountNumber = newBankAccountNumber)
+    }
+
+    fun getUserDetails() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
             val documentRef = FirebaseFirestore.getInstance().collection("users").document(userId)
-            loading = true
+            _loading.value = true
 
             viewModelScope.launch {
                 documentRef.get()
                     .addOnSuccessListener { document ->
                         if (document.exists()) {
-                            val userData = document.data as HashMap<String, Any>
-                            fullName = userData["fullName"] as String
-                            position = userData["position"] as String
-                            businessName = userData["businessName"] as String
-                            businessAddress = userData["businessAddress"] as String
-                            suburb = userData["suburb"] as String
-                            city = userData["city"] as String
-                            bankAccountNumber = userData["bankAccountNumber"] as String
-                            email = userData["email"] as String
-                            loading = false
-                            onSuccess(userData)
+                            val userData = document.data?.let {
+                                UserDetails(
+                                    fullName = it["fullName"] as? String ?: "",
+                                    position = it["position"] as? String ?: "",
+                                    businessName = it["businessName"] as? String ?: "",
+                                    businessAddress = it["businessAddress"] as? String ?: "",
+                                    suburb = it["suburb"] as? String ?: "",
+                                    city = it["city"] as? String ?: "",
+                                    bankAccountNumber = it["bankAccountNumber"] as? String ?: "",
+                                )
+                            }
+                            if (userData != null) {
+                                _userDetails.value = userData
+                                _loading.value = false
+                            } else {
+                                _errorMessage.value = "User data not found"
+                                _loading.value = false
+                            }
                         } else {
-                            loading = false
-                            onFailure("User data not found")
+                            _errorMessage.value = "User data not found"
+                            _loading.value = false
                         }
                     }
                     .addOnFailureListener { e ->
-                        loading = false
-                        onFailure(e.message ?: "Failed to retrieve user document")
+                        _loading.value = false
+                        _errorMessage.value = e.message ?: "Failed to retrieve user document"
                     }
             }
         } else {
-            onFailure("User ID is null")
+            _errorMessage.value = "User ID is null"
+            _loading.value = false
             Log.e("TAG", "Failed to fetch user details: User ID is null")
         }
     }
 
-    fun updateUserDetails(
-        onSuccess: () -> Unit,
-        onFailure: (String) -> Unit
-    ) {
+    fun updateUserDetails() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
-            val updatedUserData: HashMap<String, Any> = hashMapOf(
-                "fullName" to fullName,
-                "position" to position,
-                "businessName" to businessName,
-                "businessAddress" to businessAddress,
-                "suburb" to suburb,
-                "city" to city,
-                "bankAccountNumber" to bankAccountNumber,
-                "email" to email,
+            val updatedUserData = hashMapOf(
+                "fullName" to _userDetails.value.fullName,
+                "position" to _userDetails.value.position,
+                "businessName" to _userDetails.value.businessName,
+                "businessAddress" to _userDetails.value.businessAddress,
+                "suburb" to _userDetails.value.suburb,
+                "city" to _userDetails.value.city,
+                "bankAccountNumber" to _userDetails.value.bankAccountNumber,
             )
 
-            loading = true
+            _loading.value = true
 
             viewModelScope.launch {
-                val documentRef =
-                    FirebaseFirestore.getInstance().collection("users").document(userId)
+                val documentRef = FirebaseFirestore.getInstance().collection("users").document(userId)
 
                 documentRef.get()
                     .addOnSuccessListener { document ->
                         if (document.exists()) {
-                            documentRef.update(updatedUserData)
+                            documentRef.update(updatedUserData as Map<String, Any>)
                                 .addOnSuccessListener {
-                                    loading = false
-                                    fullName = ""
-                                    position = ""
-                                    businessName = ""
-                                    businessAddress = ""
-                                    suburb = ""
-                                    city = ""
-                                    bankAccountNumber = ""
-                                    email = ""
-                                    onSuccess()
+                                    _loading.value = false
                                 }
                                 .addOnFailureListener { e ->
-                                    loading = false
-                                    onFailure(
-                                        e.message ?: "Failed to update user data"
-                                    )
+                                    _loading.value = false
+                                    _errorMessage.value = e.message ?: "Failed to update user data"
                                 }
                         } else {
                             documentRef.set(updatedUserData)
                                 .addOnSuccessListener {
-                                    loading = false
-                                    fullName = ""
-                                    position = ""
-                                    businessName = ""
-                                    businessAddress = ""
-                                    suburb = ""
-                                    city = ""
-                                    bankAccountNumber = ""
-                                    email = ""
-                                    onSuccess()
+                                    _loading.value = false
+                                    _userDetails.value = UserDetails() // Reset fields after creation
                                 }
                                 .addOnFailureListener { e ->
-                                    loading = false
-                                    onFailure(
-                                        e.message ?: "Failed to create user data"
-                                    )
+                                    _loading.value = false
+                                    _errorMessage.value = e.message ?: "Failed to create user data"
                                 }
                         }
                     }
                     .addOnFailureListener { e ->
-                        onFailure(e.message ?: "Failed to retrieve user document")
+                        _loading.value = false
+                        _errorMessage.value = e.message ?: "Failed to retrieve user document"
                     }
             }
         } else {
-            onFailure("User ID is null")
+            _errorMessage.value = "User ID is null"
+            _loading.value = false
             Log.e("TAG", "Failed to update user: User ID is null")
         }
     }
