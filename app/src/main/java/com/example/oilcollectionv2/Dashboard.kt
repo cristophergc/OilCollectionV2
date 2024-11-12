@@ -45,14 +45,13 @@ import kotlinx.coroutines.launch
 fun Dashboard(
     onCollectionRequest: () -> Unit,
     onLogoutSuccess: () -> Unit,
-    viewModel: DashboardViewModel = viewModel()
+    viewModel: DashboardViewModel = viewModel(),
+    userDetailsViewModel: UserDetailsViewModel = viewModel()
 ) {
     val loading by viewModel.loading.collectAsState()
-
     val selectedScreen = remember { mutableStateOf("Dashboard") }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
     val drawerItems = listOf("Dashboard", "My Details", "Sign Out")
 
     ModalNavigationDrawer(
@@ -109,7 +108,14 @@ fun Dashboard(
             } else {
                 when (selectedScreen.value) {
                     "My Details" -> {
+                        LaunchedEffect(selectedScreen.value) {
+                            userDetailsViewModel.getUserDetails(
+                                onSuccess = { /* Handle successful data load */ },
+                                onFailure = { /* Handle error on data load */ }
+                            )
+                        }
                         UserDetailsForm(
+                            viewModel = userDetailsViewModel,
                             onUpdateSuccess = { /* Handle success */ },
                             onUpdateFailure = { /* Handle failure */ }
                         )

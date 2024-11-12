@@ -1,5 +1,6 @@
 package com.example.oilcollectionv2
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -27,7 +28,8 @@ class LoginViewModel : ViewModel() {
                 FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password).await()
                 checkUserDetailsFilled(onLoginSuccess)
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Login failed"
+                _errorMessage.value = "The user email or password is incorrect. If you are not registered, click on the Register button."
+                Log.e("Login error", e.message.toString())
             } finally {
                 _loading.value = false
             }

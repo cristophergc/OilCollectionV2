@@ -24,6 +24,43 @@ class UserDetailsViewModel : ViewModel() {
     var errorMessage by mutableStateOf("")
     var loading by mutableStateOf(false)
 
+    fun getUserDetails(onSuccess: (HashMap<String, Any>) -> Unit, onFailure: (String) -> Unit) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            val documentRef = FirebaseFirestore.getInstance().collection("users").document(userId)
+            loading = true
+
+            viewModelScope.launch {
+                documentRef.get()
+                    .addOnSuccessListener { document ->
+                        if (document.exists()) {
+                            val userData = document.data as HashMap<String, Any>
+                            fullName = userData["fullName"] as String
+                            position = userData["position"] as String
+                            businessName = userData["businessName"] as String
+                            businessAddress = userData["businessAddress"] as String
+                            suburb = userData["suburb"] as String
+                            city = userData["city"] as String
+                            bankAccountNumber = userData["bankAccountNumber"] as String
+                            email = userData["email"] as String
+                            loading = false
+                            onSuccess(userData)
+                        } else {
+                            loading = false
+                            onFailure("User data not found")
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        loading = false
+                        onFailure(e.message ?: "Failed to retrieve user document")
+                    }
+            }
+        } else {
+            onFailure("User ID is null")
+            Log.e("TAG", "Failed to fetch user details: User ID is null")
+        }
+    }
+
     fun updateUserDetails(
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
@@ -53,6 +90,14 @@ class UserDetailsViewModel : ViewModel() {
                             documentRef.update(updatedUserData)
                                 .addOnSuccessListener {
                                     loading = false
+                                    fullName = ""
+                                    position = ""
+                                    businessName = ""
+                                    businessAddress = ""
+                                    suburb = ""
+                                    city = ""
+                                    bankAccountNumber = ""
+                                    email = ""
                                     onSuccess()
                                 }
                                 .addOnFailureListener { e ->
@@ -65,6 +110,14 @@ class UserDetailsViewModel : ViewModel() {
                             documentRef.set(updatedUserData)
                                 .addOnSuccessListener {
                                     loading = false
+                                    fullName = ""
+                                    position = ""
+                                    businessName = ""
+                                    businessAddress = ""
+                                    suburb = ""
+                                    city = ""
+                                    bankAccountNumber = ""
+                                    email = ""
                                     onSuccess()
                                 }
                                 .addOnFailureListener { e ->
